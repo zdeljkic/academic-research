@@ -1,24 +1,79 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# This transforms takes a phrase and searches Google Scholar for articles.
+# The website url and the maximum number of returned books and articles is passed in as a parameter.
 
 import sys
 import requests
 from bs4 import BeautifulSoup
 from generic_transform import *
 
+# load input phrase and parameters
 e_type,e_values,params = get_from_args()
 
-phrase = e_values["value"]
+query = e_values["value"]
+numResults = int(params["numResults"])
 
-phrase = "computer forensics"
+# repeat until we have enough results
+# counter goes up by 10 to get the results from the next page after we parse the current page
+counter = 0
+while True:
+	req = requests.get("http://scholar.google.com/scholar", params = {"q": query, "as_vis": "1", "start": str(counter)})
+	soup = BeautifulSoup(req.text)
 
-p = {"q": phrase, "as_vis": "1"}
-r = requests.get("http://scholar.google.com/scholar", params = p)
+	for parent_tag in soup.find_all(class_ = "gs_ri"):
+		# if the title has [BOOK] as a prefix, we will skip it - we want articles
+		# otherwise, remove the [...] prefixes (if they exist) and take the rest as the title_string
+		title_tag = parent_tag.h3
 
-soup = BeautifulSoup(r.text)
+		if title_tag.text[:6] == "[BOOK]":
+			continue
 
-res = soup.find_all(class_ = "gs_rt")
-for r in res:
-	if r.text[:6] != "[BOOK]":
-		write_result("phrase", {"value": r.a.text})
+		index = title_tag.text.rfind("]")
+		if index != -1:
+			title_string = title_tag.text[index+1:].strip()
+		else:
+			title_string = title_tag.text
 
+		# the authors are listed in this form:
+		# <initials1> <lastname1>, <initials2> <lastname2>, ...
+		# and they're ending either in "-" or "…" character
+		# also, if they end in "…" that means not all authors are listed - I didn't find an easy way to get the rest
+		authors_tag = parent_tag.find(class_ = "gs_a")
+
+		ind1 = authors_tag.text.find("-")
+		ind2 = authors_tag.text.find(u"…")
+
+		# we want to get the smaller index of the two, if the second index even exists
+		if ind2 == -1:
+			index = ind1
+		else:
+			index = ind1 if ind1 < ind2 else ind2
+
+		# we want to get the authors in this form:
+		# <lastname1>, <initials1>; <lastname2>, <initials2>, ...
+		authors_string = ""
+		for author in authors_tag.text[:index].split(","):
+			initials, lastname = author.strip().split(" ", 1)
+			authors_string += lastname + ", " + initials + "; "
+
+		authors_string = authors_string[:-2]	# strip the "; " at the end
+
+		# the date is located near the end of the string in the author tag
+		# specifically, it's just before the last " -" sequence, eg. "...2008 - example.com"
+		index = authors_tag.text.rfind(" -")
+
+		date_string = authors_tag.text[index-4:index]
+
+		# write the result and decrement the remaing number of results we have to fetch
+		write_result("article", {"value": title_string, "authors": authors_string, "date": date_string})
+		numResults -= 1
+
+		# if we found all the results - exit
+		if numResults == 0:
+			sys.exit()
+
+	# go to the next 10 results (next page)
+	counter += 10
 

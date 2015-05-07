@@ -3,7 +3,7 @@
 <transform name="PhraseToBookLOC" longName="To Book (LOC)" type="generic" >
   <description>find books from phrase using library of congress</description>
   <parameters>
-    <param name="NbResult" longName="Number or results desired" description="number of result asked" default="20" optional="false" level="advanced" format="int">
+    <param name="numResults" longName="Number of results desired" description="number of result asked" default="10" optional="false" level="advanced" format="int">
       <int min="1" max="100"/>
     </param>
   </parameters>

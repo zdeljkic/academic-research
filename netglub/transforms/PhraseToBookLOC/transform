@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
-# bugovi:
-#  - cini se da daje 1 rezultat premalo
+# This transforms takes a phrase and searches the library of congress (loc.gov) for book
+# The desired number of books is passed in as a parameter.
+
+# bugs:
+#  - it seems like it occasionally gives 1 result less
 #  - ponekad je na kraju rezultata " /" ili "."
 #  - mozda treba unicode( ) na stringove prije ispisa
 
@@ -9,33 +12,45 @@ import requests
 from bs4 import BeautifulSoup
 from generic_transform import *
 
+# load input phrase and parameters
 e_type,e_values,params = get_from_args()
 
-#val = {"value": v, "authors": "autori knjige", "date": "datum knjige"}
-#write_result("book", val)
-#sys.stdout.flush()
+query = e_values["value"]
+numResults = int(params["numResults"])
 
-i = e_values["value"]
-n = int(params["NbResult"])
+# both the query and the number of results are sent in the HTTP GET request
+par = {"q": query, "fa": "original-format:book", "all": "true", "c": numResults}
+req = requests.get("http://www.loc.gov/search/", params = par)
 
-p = {"q": i, "fa": "original-format:book", "all": "true", "c": n}
-r = requests.get("http://www.loc.gov/search/", params = p)
+soup = BeautifulSoup(req.text)
 
-soup = BeautifulSoup(r.text)
+for parent_tag in soup.find_all(class_ = "description"):
+	# navigate to the title tag and get the string
+	# the string ocasionally has trailing whitespace and punctuation (/,.), so remove that too
+	title_tag = parent_tag.h2.a
 
-for t in soup.find_all(class_ = "description"):
-	title = t.h2.a.string.strip()
-	authors = ""
-	date = ""
+	title_string = title_tag.text.strip()
+	while not title_string[-1:].isalnum():
+		title_string = title_string[:-1]
 
-	c = t.find(class_ = "contributor")
-	if not (c is None):
-		authors = c.span.string
+	# navigate to the authors tag and check if it exists
+	# if it does, get the string, it's already in the correct format, otherwise leave it empty
+	authors_tag = parent_tag.find(class_ = "contributor")
 
-	d = t.find(class_ = "date")
-	if not (d is None):
-		date = d.span.string
+	if authors_tag is not None:
+		authors_string = authors_tag.span.text
+	else:
+		authors_string = ""
 
-	write_result("book", {"value": title, "authors": authors, "date": date})
-	sys.stdout.flush()
+	# navigate to the date tag and check if it exists
+	# if it does, get the string, it's also in the correct format, otherwise leave it empty
+	date_tag = parent_tag.find(class_ = "date")
+
+	if date_tag is not None:
+		date_string = date_tag.span.text
+	else:
+		date_string = ""
+
+	# write the final result
+	write_result("book", {"value": title_string, "authors": authors_string, "date": date_string})
 

@@ -3,7 +3,7 @@
 <transform name="PhraseToArticlesGS" longName="To Articles (GS)" type="generic" >
   <description>find articles based on input phrase</description>
   <parameters>
-    <param name="NbResult" longName="Number or results desired" description="number of result asked" default="" optional="false" level="advanced" format="int">
+    <param name="numResults" longName="Number of results desired" description="number of result asked" default="" optional="false" level="advanced" format="int">
       <int min="1" max="100"/>
     </param>
   </parameters>
@@ -15,6 +15,6 @@
     <entity type="phrase" />
   </input>
   <output>
-    <entity type="phrase" />
+    <entity type="article" />
   </output>
 </transform>

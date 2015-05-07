@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # This transforms takes a phrase and searches a website that uses the Koha Integrated Library System.
-# The website url and the desired number of books and articles is passed in as a parameter.
+# The website url and the maximum number of returned books and articles is passed in as a parameter.
 
 import requests
 from bs4 import BeautifulSoup
@@ -18,7 +18,7 @@ maxResults = params["maxResults"]
 # 1) http://example.com
 # 2) http://example.com/
 # 3) http://example.com/cgi-bin/koha/opac-main.pl
-# we need to get it in the last form of http://example.com/cgi-bin/koha/opac-search.pl
+# we need to get it in the form of http://example.com/cgi-bin/koha/opac-search.pl
 if url.endswith("/cgi-bin/koha/opac-main.pl"):
 	searchurl = url[:-7] + "search.pl"
 elif url.endswith("/"):
@@ -43,9 +43,10 @@ for title_tag in soup.find_all(class_ = "title"):
 	# get the title string
 	title_string = title_tag.text
 
-	# if there is no authors_tag (author_tag is None), then we just leave the authors_string empty
-	# otherwise, the authors string is almost already in the correct format,
+	# try to get the authors_tag and check if it exists
+	# if it does, the authors string is almost already in the correct format,
 	# we just need to remove the extra whitespace and the trailing dot
+	# if it doesn't, just leave the authors string empty
 	authors_tag = parent_tag.find(class_ = "author")
 
 	if authors_tag is not None:
@@ -53,15 +54,14 @@ for title_tag in soup.find_all(class_ = "title"):
 	else:
 		authors_string = ""
 
-	# get the type (book or article), if it's neither - we skip the entry
+	# get the type (book or article), if it's neither - skip the entry
 	type_tag = parent_tag.find(class_ = "materialtype")
 
 	type_string = type_tag["alt"]
 	if not (type_string == "article" or type_string == "book"):
 		continue
 
-	# get the date
-	# we try to get the tag with the publisher information, and check if it exists
+	# try to get the tag with the publisher information, and check if it exists
 	# if it does, and the last 4 charaters aren't "   0" or similar, we take them as the publishing year
 	date_tag = parent_tag.find(class_ = "results_summary publisher")
 
@@ -70,7 +70,7 @@ for title_tag in soup.find_all(class_ = "title"):
 	else:
 		date_string = ""
 
-	# write the final result
+	# write the final result and decrement the counter counting the remaining number of results we have to fetch
 	write_result(type_string, {"value": title_string, "authors": authors_string, "date": date_string})
 	counter -= 1
 
