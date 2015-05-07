@@ -1,0 +1,18 @@
+<?xml version='1.0'?>
+<!DOCTYPE TransformSchema>
+<transform name="BookArticleToAuthor" longName="To Author" type="generic" >
+  <description>retrieve author information</description>
+  <parameters>
+  </parameters>
+  <config>
+    <value name="need_root">true</value>
+    <value name="input_as_args">true</value> <!-- otherwise on stdin -->
+  </config>
+  <input>
+    <entity type="article" />
+    <entity type="book" />
+  </input>
+  <output>
+    <entity type="author" />
+  </output>
+</transform>
