@@ -15,36 +15,54 @@ url = params["url"]
 book_counter = params["numBookResults"]
 article_counter = params["numArticleResults"]
 
-# make sure the url doesn't end in a '/'
-if url[-1] == "/":
-	url = url[:-1]
-
-# find the url of the search site
-# eg. if the original url is http://lib.fer.hr or http://lib.fer.hr/cgi-bin/koha/opac-main.pl,
-# we want http://lib.fer.hr/cgi-bin/koha/opac-search.pl
-# we can find the url of the search site in the searchform's action attribute
-req = requests.get(url)
-soup = BeautifulSoup(req.text)
-
-searchform = soup.find(id = "searchform")
-searchurl = url + searchform[action]
+# the input url is in one of these three forms:
+# 1) http://example.com
+# 2) http://example.com/
+# 3) http://example.com/cgi-bin/koha/opac-search.pl
+# we need to get it in the last form (ending with ...opac-search.pl)
+if url.endswith("/cgi-bin/koha/opac-search.pl"):
+	searchurl = url
+elif url.endswith("/"):
+	searchurl = url + "cgi-bin/koha/opac-search.pl"
+else:
+	searchurl = url + "/cgi-bin/koha/opac-search.pl"
 
 req = requests.get(searchurl, params = {"q": query})
 soup = BeautifulSoup(req.text)
 
-for t in soup.find_all(class_ = "description"):
-	title = t.h2.a.string.strip()
-	authors = ""
-	date = ""
+for title_tag in soup.find_all(class_ = "title"):
+	# we're going to use the title_tag's parent tag to easily navigate to other info
+	parent_tag = title_tag.parent
 
-	c = t.find(class_ = "contributor")
-	if not (c is None):
-		authors = c.span.string
+	# get the title string
+	title_string = title_tag.text
 
-	d = t.find(class_ = "date")
-	if not (d is None):
-		date = d.span.string
+	# the authors string is almost in the correct format - we just need to remove the trailing dot and the extra whitespace
+	# unless there is no author string, then authors_tag is None and we leave the authors_string empty
+	authors_tag = parent_tag.find(class_ = "author")
 
-	write_result("book", {"value": title, "authors": authors, "date": date})
-	sys.stdout.flush()
+	if authors_tag is not None:
+		authors_string = authors_tag.text.replace("\n            ", " ")[:-2]
+	else:
+		authors_string = ""
+
+	# get the type (book or article)
+	type_tag = parent_tag.find(class_ = "materialtype")
+
+	type_string = type_tag["alt"]
+	if not (type_string == "article" or type_string == "book"):
+		continue
+
+	# get the date
+	# we try to get the tag with the publisher information, and check if it exists
+	# if it does, and the last 4 charaters aren't "   0" or similar, we take them as the publishing year
+	date_tag = parent_tag.find(class_ = "results_summary publisher")
+
+	if date_tag is not None and date_tag.text[-4:].strip() != "0":
+		date_string = date_tag.text[-4:].strip()
+	else:
+		date_string = ""
+
+	# write the final result
+	write_result(type_string, {"value": title_string, "authors": authors_string, "date": date_string})
 
