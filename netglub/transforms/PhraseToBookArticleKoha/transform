@@ -1,0 +1,50 @@
+#!/usr/bin/python
+
+# This transforms takes a phrase and searches a website that uses the Koha Integrated Library System.
+# The website url and the desired number of books and articles is passed in as a parameter.
+
+import requests
+from bs4 import BeautifulSoup
+from generic_transform import *
+
+# load input phrase and parameters
+e_type,e_values,params = get_from_args()
+
+query = e_values["value"]
+url = params["url"]
+book_counter = params["numBookResults"]
+article_counter = params["numArticleResults"]
+
+# make sure the url doesn't end in a '/'
+if url[-1] == "/":
+	url = url[:-1]
+
+# find the url of the search site
+# eg. if the original url is http://lib.fer.hr or http://lib.fer.hr/cgi-bin/koha/opac-main.pl,
+# we want http://lib.fer.hr/cgi-bin/koha/opac-search.pl
+# we can find the url of the search site in the searchform's action attribute
+req = requests.get(url)
+soup = BeautifulSoup(req.text)
+
+searchform = soup.find(id = "searchform")
+searchurl = url + searchform[action]
+
+req = requests.get(searchurl, params = {"q": query})
+soup = BeautifulSoup(req.text)
+
+for t in soup.find_all(class_ = "description"):
+	title = t.h2.a.string.strip()
+	authors = ""
+	date = ""
+
+	c = t.find(class_ = "contributor")
+	if not (c is None):
+		authors = c.span.string
+
+	d = t.find(class_ = "date")
+	if not (d is None):
+		date = d.span.string
+
+	write_result("book", {"value": title, "authors": authors, "date": date})
+	sys.stdout.flush()
+

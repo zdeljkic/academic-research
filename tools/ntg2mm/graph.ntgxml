@@ -1,0 +1,65 @@
+<!DOCTYPE NtgXml>
+<NtgXml graphId="7">
+ <EntitySet>
+  <Entity svgId="-1" type="phrase" id="0">
+   <property key="value" value="Computer forensics"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="9">
+   <property key="value" value="Digital forensics"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="42">
+   <property key="value" value="7th International Conference on Financial Criminology"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="43">
+   <property key="value" value="International Conference on Cyber Security"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="44">
+   <property key="value" value="4th International Conference on Environmental Research and Technology (ICERT 2015)"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="45">
+   <property key="value" value="7th International Conference on Digital Forensics &amp; Cyber Crime - ICDF2C 2015"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="46">
+   <property key="value" value="The 11st Information Security Practice and Experience Conference – ISPEC 2015"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="47">
+   <property key="value" value="The 3rd International Symposium on Digital Forensics and Security (ISDFS2015)"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="48">
+   <property key="value" value="Advances in qPCR &amp; dPCR"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="49">
+   <property key="value" value="International Workshop on Digital Forensics and Incident Analysis (WDFIA 2015)"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="50">
+   <property key="value" value="International Workshop on Cyber Crime (IWCC 2015)"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="51">
+   <property key="value" value="10th International Conference on Systematic Approaches to Digital Forensics Engineering (SADFE 2015)"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="52">
+   <property key="value" value="2015 Digital Forensic in Asia (DFIA 2015)"/>
+  </Entity>
+  <Entity svgId="-1" type="phrase" id="53">
+   <property key="value" value="Global Premier International Conference on Cryptography and Security 2015"/>
+  </Entity>
+ </EntitySet>
+ <EdgeSet>
+  <Edge from="0" to="2"/>
+  <Edge from="0" to="5"/>
+  <Edge from="0" to="3"/>
+  <Edge from="0" to="4"/>
+  <Edge from="0" to="1"/>
+  <Edge from="1" to="12"/>
+  <Edge from="1" to="5"/>
+  <Edge from="1" to="6"/>
+  <Edge from="1" to="7"/>
+  <Edge from="1" to="10"/>
+  <Edge from="1" to="3"/>
+  <Edge from="1" to="13"/>
+  <Edge from="1" to="9"/>
+  <Edge from="1" to="11"/>
+  <Edge from="1" to="8"/>
+ </EdgeSet>
+</NtgXml>
+

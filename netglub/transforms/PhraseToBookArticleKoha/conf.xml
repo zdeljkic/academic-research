@@ -1,0 +1,27 @@
+<?xml version='1.0'?>
+<!DOCTYPE TransformSchema>
+<transform name="PhraseToBookArticleKoha" longName="To Book/Article (Koha)" type="generic" >
+  <description>find books and articles from a website using the Koha system</description>
+  <parameters>
+    <param name="url" longName="URL of the Koha website" description="url of the Koha website" optional="false" level="advanced" format="string">
+      <string regex=".*"/>
+    </param>
+    <param name="numBookResults" longName="Number of book results desired" description="number of book result asked" default="5" optional="false" level="advanced" format="int">
+      <int min="1" max="100"/>
+    </param>
+    <param name="numArticleResults" longName="Number of article results desired" description="number of article result asked" default="5" optional="false" level="advanced" format="int">
+      <int min="1" max="100"/>
+    </param>
+  </parameters>
+  <config>
+    <value name="need_root">true</value>
+    <value name="input_as_args">true</value> <!-- otherwise on stdin -->
+  </config>
+  <input>
+    <entity type="phrase" />
+  </input>
+  <output>
+    <entity type="book" />
+    <entity type="article" />
+  </output>
+</transform>

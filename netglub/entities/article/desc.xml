@@ -1,0 +1,16 @@
+<?xml version='1.0'?>
+<!DOCTYPE EntitySchema>
+<entity name="article" longName="Article" color="#ffc000" pngImage="image.png" svgImage="image.svg"><!-- Format color : #RRGGBB where R,G and B are hexa digits -->
+  <description>article</description>
+  <fieldList>
+    <field name="value" longName="Title" description="title" default="" level="default" format="string" ioMode="input">
+      <string regex=".*"/>
+    </field>
+    <field name="authors" longName="Authors" description="authors" default="" optional="true" level="advanced" format="string" ioMode="input">
+      <string regex=".*"/>
+    </field>
+    <field name="date" longName="Date" description="date" default="" optional="true" level="advanced" format="string" ioMode="input">
+      <string regex=".*"/>
+    </field>
+  </fieldList>
+</entity>

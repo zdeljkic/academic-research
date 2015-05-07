@@ -1,0 +1,27 @@
+#!/usr/bin/python
+
+import sys
+import requests
+from bs4 import BeautifulSoup
+from generic_transform import *
+
+e_type,e_values,params = get_from_args()
+
+phrase = e_values["value"]
+
+url = "http://www.conferencealerts.com/"
+
+p = {"searchTerm": phrase}
+r = requests.get("http://www.conferencealerts.com/search", params = p)
+
+soup = BeautifulSoup(r.text)
+
+res = soup.find(id = "searchResultTable").find_all("a")
+for r in res:
+	s = r.text
+	
+	if s == "1" or s == "All":
+		continue
+	else:
+		write_result("phrase", {"value": s})
+	

@@ -1,0 +1,41 @@
+#!/usr/bin/python
+
+# bugovi:
+#  - cini se da daje 1 rezultat premalo
+#  - ponekad je na kraju rezultata " /" ili "."
+#  - mozda treba unicode( ) na stringove prije ispisa
+
+import requests
+from bs4 import BeautifulSoup
+from generic_transform import *
+
+e_type,e_values,params = get_from_args()
+
+#val = {"value": v, "authors": "autori knjige", "date": "datum knjige"}
+#write_result("book", val)
+#sys.stdout.flush()
+
+i = e_values["value"]
+n = int(params["NbResult"])
+
+p = {"q": i, "fa": "original-format:book", "all": "true", "c": n}
+r = requests.get("http://www.loc.gov/search/", params = p)
+
+soup = BeautifulSoup(r.text)
+
+for t in soup.find_all(class_ = "description"):
+	title = t.h2.a.string.strip()
+	authors = ""
+	date = ""
+
+	c = t.find(class_ = "contributor")
+	if not (c is None):
+		authors = c.span.string
+
+	d = t.find(class_ = "date")
+	if not (d is None):
+		date = d.span.string
+
+	write_result("book", {"value": title, "authors": authors, "date": date})
+	sys.stdout.flush()
+

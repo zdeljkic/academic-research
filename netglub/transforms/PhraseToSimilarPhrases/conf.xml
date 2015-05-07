@@ -1,0 +1,20 @@
+<?xml version='1.0'?>
+<!DOCTYPE TransformSchema>
+<transform name="PhraseToSimilarPhrases" longName="To Similar Phrases [W]" type="generic" >
+  <description>find similar phrases using wikipedia</description>
+  <parameters>
+    <param name="NbResult" longName="Number or results desired" description="number of result asked" default="20" optional="false" level="advanced" format="int">
+      <int min="1" max="100"/>
+    </param>
+  </parameters>
+  <config>
+    <value name="need_root">true</value>
+    <value name="input_as_args">true</value> <!-- otherwise on stdin -->
+  </config>
+  <input>
+    <entity type="phrase" />
+  </input>
+  <output>
+    <entity type="phrase" />
+  </output>
+</transform>

@@ -1,0 +1,57 @@
+Za samo GUI odradi samo 1. korak.
+
+1. Compiliranje GUI-a
+ a) Napravi tmp folder (npr /tmp/netglub)
+ b) skini i u njega extractaj netglub-1.0.tar.gz
+    - http://redmine.lab.diateam.net/attachments/download/1/netglub-1.0.tar.gz
+ c) instaliraj build-essential i qt-sdk (sudo apt-get install)
+ d) instaliraj graphviz verziju 2.26.3 (bitno!)
+	https://launchpad.net/ubuntu/+archive/primary/+files/graphviz_2.26.3.orig.tar.gz
+	skini, odpakiraj, ./configure && make && sudo make install
+ e) pozicioniraj se u qng, qmake -qt=4 (bitno!)
+ f) otvori makefile, na kraj LIBS dodaj -lz (na kraj! bitno!)
+ g) make
+ - konacan file je u bin/unix/netglub nesto tako, mora se pokrenut sa sudo
+ - kopiraj konacni file negdje!! inace ce se zbrisat (jer je u /tmp)
+
+2. Instaliraj MySQL i u njega upisi sta treba
+ a) mysql-server
+    - sudo apt-get install mysql-server
+    - odaberi i zapamti root password
+ b) mysql-workbench (preporucam)
+    - sudo apt-get install mysql-workbench
+ c) napravi bazu i korisnika i daj mu privilegije (pita za password)
+	mysqladmin create netglub -u root -p
+	mysql -u root -p -e "grant all privileges on netglub.* to 'netglub'@'localhost' identified by 'netglub'"
+ d) upisi u bazu sta treba
+	cd <direktorij netglub source-a>
+	mysql -u root -p netglub < master/tools/sql/netglub.sql
+
+3. Compiliraj master
+ 0) ako vec nisi, instaliraj build-essential i qt-sdk (sudo apt-get install)
+ 1) sudo apt-get install libqt4-sql-mysql 
+ a) pozicioniraj se u master/src, otvori main.cpp, u include-ove dodaj #include <unistd.h>
+ b) qmake -qt=4 && make
+ c) cd tools && sudo ./install.sh (bitno da cd pa onda install umjesto sudo tools/install.sh, barem mi se cini)
+	Installation réussie = instalacija uspjesna
+ - master ce od sada bit pokrenut pri svakom bootu (trenutno ne bi trebo bit pokrenut), sudo service netglub master [start|stop|restart|status]
+ - netglub-master -h
+ - /etc/netglub/master.conf
+
+4. Compiliraj slave
+ - sve ko master samo bez a
+
+sudo chown -R zad:zad /usr/local/share/netglub
+(za lakse kopiranje transforma i entitya)
+
+5. Instaliravanje mojeg zavrsnog
+ a) instalirat pip, pa requests i beautifulsoup
+	sudo apt-get install python-pip
+	sudo pip install requests (mozda nije potrebno)
+	sudo pip install beautifulsoup4
+
+ b) kopiraj xml-ove (master/slave x entitites/transforms)
+ c) stavi u mysql bazi sta treba
+
+
+
