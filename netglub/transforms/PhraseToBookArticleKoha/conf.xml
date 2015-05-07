@@ -6,11 +6,8 @@
     <param name="url" longName="URL of the Koha website" description="url of the Koha website" optional="false" level="advanced" format="string">
       <string regex=".*"/>
     </param>
-    <param name="numBookResults" longName="Number of book results desired" description="number of book result asked" default="5" optional="false" level="advanced" format="int">
-      <int min="1" max="100"/>
-    </param>
-    <param name="numArticleResults" longName="Number of article results desired" description="number of article result asked" default="5" optional="false" level="advanced" format="int">
-      <int min="1" max="100"/>
+    <param name="maxResults" longName="Maximum number of books/articles desired" description="number of results asked" default="10" optional="false" level="advanced" format="int">
+      <int min="1" max="50"/>
     </param>
   </parameters>
   <config>

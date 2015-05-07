@@ -12,16 +12,15 @@ e_type,e_values,params = get_from_args()
 
 query = e_values["value"]
 url = params["url"]
-book_counter = params["numBookResults"]
-article_counter = params["numArticleResults"]
+maxResults = params["maxResults"]
 
 # the input url is in one of these three forms:
 # 1) http://example.com
 # 2) http://example.com/
-# 3) http://example.com/cgi-bin/koha/opac-search.pl
-# we need to get it in the last form (ending with ...opac-search.pl)
-if url.endswith("/cgi-bin/koha/opac-search.pl"):
-	searchurl = url
+# 3) http://example.com/cgi-bin/koha/opac-main.pl
+# we need to get it in the last form of http://example.com/cgi-bin/koha/opac-search.pl
+if url.endswith("/cgi-bin/koha/opac-main.pl"):
+	searchurl = url[:-7] + "search.pl"
 elif url.endswith("/"):
 	searchurl = url + "cgi-bin/koha/opac-search.pl"
 else:
@@ -30,15 +29,23 @@ else:
 req = requests.get(searchurl, params = {"q": query})
 soup = BeautifulSoup(req.text)
 
+# set up the counter so we don't return more results than asked
+counter = int(maxResults)
+
 for title_tag in soup.find_all(class_ = "title"):
-	# we're going to use the title_tag's parent tag to easily navigate to other info
+	# check if we've already returned the max amount of results
+	if counter == 0:
+		break
+
+	# we're going to use the title_tag's parent tag to easily navigate to other tags
 	parent_tag = title_tag.parent
 
 	# get the title string
 	title_string = title_tag.text
 
-	# the authors string is almost in the correct format - we just need to remove the trailing dot and the extra whitespace
-	# unless there is no author string, then authors_tag is None and we leave the authors_string empty
+	# if there is no authors_tag (author_tag is None), then we just leave the authors_string empty
+	# otherwise, the authors string is almost already in the correct format,
+	# we just need to remove the extra whitespace and the trailing dot
 	authors_tag = parent_tag.find(class_ = "author")
 
 	if authors_tag is not None:
@@ -46,7 +53,7 @@ for title_tag in soup.find_all(class_ = "title"):
 	else:
 		authors_string = ""
 
-	# get the type (book or article)
+	# get the type (book or article), if it's neither - we skip the entry
 	type_tag = parent_tag.find(class_ = "materialtype")
 
 	type_string = type_tag["alt"]
@@ -65,4 +72,5 @@ for title_tag in soup.find_all(class_ = "title"):
 
 	# write the final result
 	write_result(type_string, {"value": title_string, "authors": authors_string, "date": date_string})
+	counter -= 1
 
