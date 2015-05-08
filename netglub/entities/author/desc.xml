@@ -9,8 +9,5 @@
     <field name="firstname" longName="First name" description="authors" default="" optional="true" level="advanced" format="string" ioMode="input">
       <string regex=".*"/>
     </field>
-    <field name="date" longName="Date" description="date" default="" optional="true" level="advanced" format="string" ioMode="input">
-      <string regex=".*"/>
-    </field>
   </fieldList>
 </entity>

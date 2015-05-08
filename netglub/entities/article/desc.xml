@@ -6,7 +6,7 @@
     <field name="value" longName="Title" description="title" default="" level="default" format="string" ioMode="input">
       <string regex=".*"/>
     </field>
-    <field name="authors" longName="Authors" description="authors" default="" optional="true" level="advanced" format="string" ioMode="input">
+    <field name="authors" longName="Authors" description="authors" default="" optional="false" level="advanced" format="string" ioMode="input">
       <string regex=".*"/>
     </field>
     <field name="date" longName="Date" description="date" default="" optional="true" level="advanced" format="string" ioMode="input">

@@ -3,7 +3,7 @@
 <transform name="PhraseToBookArticleKoha" longName="To Book/Article (Koha)" type="generic" >
   <description>find books and articles from a website using the Koha system</description>
   <parameters>
-    <param name="url" longName="URL of the Koha website" description="url of the Koha website" optional="false" level="advanced" format="string">
+    <param name="url" longName="URL of the Koha website (don't forget http:// or https:// in front!!)" description="url of the Koha website" optional="false" level="advanced" format="string">
       <string regex=".*"/>
     </param>
     <param name="maxResults" longName="Maximum number of books/articles desired" description="number of results asked" default="10" optional="false" level="advanced" format="int">
