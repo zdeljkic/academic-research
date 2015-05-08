@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This transforms takes a phrase and searches Google Scholar for articles.
-# The website url and the maximum number of returned books and articles is passed in as a parameter.
+# The desired number of articles is passed in as a parameter.
 
 import sys
 import requests
