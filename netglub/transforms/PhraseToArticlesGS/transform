@@ -22,6 +22,13 @@ while True:
 	req = requests.get("http://scholar.google.com/scholar", params = {"q": query, "as_vis": "1", "start": str(counter)})
 	soup = BeautifulSoup(req.text)
 
+	# if we can't find the tag, it means google recognized this script as a bot
+	# and blocked further searches until the captcha is solved :(
+	# the easiest way around this is to open google scholar in your browser with the useragent equal to
+	# the one this script sends, solve the captcha, and continue :)
+	if soup.find(class_ = "gs_ri") is None:
+		sys.exit(1)
+
 	for parent_tag in soup.find_all(class_ = "gs_ri"):
 		# if the title has [BOOK] as a prefix, we will skip it - we want articles
 		# otherwise, remove the [...] prefixes (if they exist) and take the rest as the title_string
