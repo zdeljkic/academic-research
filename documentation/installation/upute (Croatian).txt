@@ -31,6 +31,14 @@ Za samo GUI odradi samo 1. korak.
  0) ako vec nisi, instaliraj build-essential i qt-sdk (sudo apt-get install)
  1) sudo apt-get install libqt4-sql-mysql 
  a) pozicioniraj se u master/src, otvori main.cpp, u include-ove dodaj #include <unistd.h>
+ 	BITNO:
+ 	MASTER NEZNA REAGIRATI NA TIMEOUT OD MYSQL BAZE
+ 	AKO SE NISTA NE DESAVA 8 SATI PO DEFAULTU MASTER CE IZGUBIT KONEKCIJU I KOD SLJEDECEG POKUSAJA KONEKCIJE SE SE POJAVITI SERIAL NOT VALID
+ 	RJESENJE ZA SAD JE POVECATI wait_timeout NA MAKSIMALNU VRIJEDNOST OD 1 GODINE I RESTARTAT MASTER BAR 1 GODISNJE
+ 	RJESENJE 2 PROMJENA SOURCE KODA, DVE OPCIJE:
+ 	a) main.cpp: setConnectOptions(MYSQL_OPT_RECONNECT) NE CINI SE DA RADI
+ 	b) ntgSessionManager.cpp: db.isOpen() i isActive() NAVODNO NE FUNKCIONIRA https://bugreports.qt.io/browse/QTBUG-223
+ 	IMPLEMENTIRATI PROVJERU JEL DB ZIV NA NEKI DRUGI NACIN?
  b) qmake -qt=4 && make
  c) cd tools && sudo ./install.sh (bitno da cd pa onda install umjesto sudo tools/install.sh, barem mi se cini)
 	Installation réussie = instalacija uspjesna
