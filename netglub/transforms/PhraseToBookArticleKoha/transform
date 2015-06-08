@@ -56,16 +56,25 @@ while counter < 200:
 	req = requests.get(searchUrl, params = {"q": query, "offset": counter})
 	soup = BeautifulSoup(req.text)
 
-	for title_tag in soup.find_all(class_ = "title"):
+	titles = soup.find_all(class_ = "title")
+	if not titles:
+		sys.exit(0) # no results
+
+	for title_tag in titles:
 		# we're going to use the title_tag's parent tag to easily navigate to other tags
 		parent_tag = title_tag.parent
 
 		# get the title string
 		title_string = title_tag.text
+		while not title_string[-1:].isalnum():
+			title_string = title_string[:-1]
 
 		# title_tag is the <a> tag so we get the url from it
 		baseUrl = searchUrl[:searchUrl[8:].index("/")+8]
-		url_string = baseUrl + title_tag["href"]
+		if title_tag.has_attr("href"):
+			url_string = baseUrl + title_tag["href"]
+		else:
+			url_string = req.url
 
 		# try to get the authors_tag and check if it exists
 		# if it does, the authors string is almost already in the correct format,
@@ -74,14 +83,28 @@ while counter < 200:
 		authors_tag = parent_tag.find(class_ = "author")
 
 		if authors_tag is not None:
-			authors_string = authors_tag.text.replace("\n            ", " ")[:-2]
+			if authors_tag.a is None:
+				authors_string = authors_tag.text.replace("\n            ", " ")[:-2]
+			else:
+				authors = []
+				for t in authors_tag.findAll("a"):
+					try:
+						authors.append(t.strings.next())
+					except:
+						pass
+				
+				authors_string = "; ".join(a for a in authors if a)
 		else:
 			authors_string = ""
-
+	
 		# get the type (book or article), if it's neither - skip the entry
 		type_tag = parent_tag.find(class_ = "materialtype")
 
-		type_string = type_tag["alt"]
+		if type_tag["alt"] != "materialTypeLabel":
+			type_string = type_tag["alt"]
+		else:
+			type_string = type_tag.parent.text.replace("Type: ", "").lower()
+		
 		if not (type_string == "article" or type_string == "book"):
 			continue
 

@@ -239,7 +239,7 @@ INSERT INTO `join_transforms_category_transforms` (`category_name`, `transform_n
 ('academic-research2', 'PhraseToBookLOC'),
 ('academic-research2', 'PhraseToConferenceCA'),
 ('academic-research1', 'PhraseToPhraseW'),
-('academic-research1', 'PhraseToBookArticleNSK');
+('academic-research2', 'PhraseToBookArticleNSK');
 
 CREATE TABLE IF NOT EXISTS `sessions` (
   `session_id` varchar(255) NOT NULL,

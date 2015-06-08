@@ -20,7 +20,11 @@ r = requests.get("http://www.conferencealerts.com/search", params = p)
 
 soup = BeautifulSoup(r.text)
 
-res = soup.find(id = "searchResultTable").find_all("a")
+srt = soup.find(id = "searchResultTable")
+if not srt:
+	sys.exit(0) # no results
+
+res = srt.find_all("a")
 for r in res:
 	s = r.text
 	url_string = url + r["href"]

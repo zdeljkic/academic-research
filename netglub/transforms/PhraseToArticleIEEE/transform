@@ -66,7 +66,11 @@ while True:
 		title_string = title_string.replace("::]", "")
 		
 		author_list = []
-		authors = r["authors"]
+		if "authors" in r:
+			authors = r["authors"]
+		else:
+			authors = []
+		
 		for a in authors:
 			if "," in a["normalizedName"]:
 				last, first = a["normalizedName"].split(", ", 1)

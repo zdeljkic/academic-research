@@ -1,8 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# This transforms takes a phrase and searches the library of congress (loc.gov) for book
-# The desired number of books is passed in as a parameter.
+# NSK
 
 import requests
 from bs4 import BeautifulSoup
@@ -21,10 +20,13 @@ def year_in_bounds(year, minYear, maxYear):
 	return True
  
 def wtf(wtfstring):
-	s = ""
-	for c in wtfstring:
-		s += chr(ord(c))
-	return s.decode("utf-8")
+	try:
+		s = ""
+		for c in wtfstring:
+			s += chr(ord(c))
+		return s.decode("utf-8")
+	except:
+		return wtfstring
 
 # load input phrase and parameters
 e_type,e_values,params = get_from_args()
@@ -52,13 +54,26 @@ searchUrl = soup.find("form")["action"]
 # both the query and the number of results are sent in the HTTP GET request
 par = {"request": query, "func": "find-e"}
 
+bad = False
 counter = 1
 while counter <= 45:
 	par["jump"] = counter
 	req = requests.get(searchUrl, params = par)
 	soup = BeautifulSoup(req.text)
+	
+	base_tags = soup.findAll(valign="baseline")
+	if not base_tags:
+		if bad:
+			sys.exit(0)	# no results
+	
+		par["request"] = "bezveze"
+		req = requests.get(searchUrl, params = par)
+		par["request"] = query
+		bad = True
+		continue
+		
 
-	for parent_tag in soup.findAll(valign="baseline"):
+	for parent_tag in base_tags:
 		tag_list = parent_tag.contents
 		
 		url_string = parent_tag.a["href"]
@@ -67,6 +82,8 @@ while counter <= 45:
 		title_string = title_string[title_string.rfind("\n"):].strip()
 		while not title_string[-1:].isalnum():
 			title_string = title_string[:-1]
+
+		title_string = wtf(title_string)
 
 		type_hr = wtf(tag_list[9].text.strip())
 		if type_hr == "knjiga":

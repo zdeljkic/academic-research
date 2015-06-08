@@ -53,10 +53,11 @@ sudo chown -R zad:zad /usr/local/share/netglub
 (za lakse kopiranje transforma i entitya)
 
 5. Instaliravanje mojeg zavrsnog
- a) instalirat pip, pa requests i beautifulsoup
+ a) instalirat pip, pa requests i beautifulsoup i lxml
 	sudo apt-get install python-pip
 	sudo pip install requests (mozda nije potrebno)
 	sudo pip install beautifulsoup4
+	sudo apt-get install python-lxml
 
  b) kopiraj xml-ove (master/slave x entitites/transforms)
  c) stavi u mysql bazi sta treba
