@@ -153,6 +153,7 @@ INSERT INTO `join_groups_transforms` (`groupname`, `transform_name`) VALUES
 ('community', 'PhraseToBookLOC'),
 ('community', 'PhraseToConferenceCA'),
 ('community', 'PhraseToPhraseW'),
+('community', 'PhraseToBookArticleNSK'),
 ('community', 'PersonToUrlSE');
 
 CREATE TABLE IF NOT EXISTS `join_groups_users` (
@@ -237,7 +238,8 @@ INSERT INTO `join_transforms_category_transforms` (`category_name`, `transform_n
 ('academic-research2', 'PhraseToBookArticleKoha'),
 ('academic-research2', 'PhraseToBookLOC'),
 ('academic-research2', 'PhraseToConferenceCA'),
-('academic-research1', 'PhraseToPhraseW');
+('academic-research1', 'PhraseToPhraseW'),
+('academic-research1', 'PhraseToBookArticleNSK');
 
 CREATE TABLE IF NOT EXISTS `sessions` (
   `session_id` varchar(255) NOT NULL,
@@ -316,6 +318,7 @@ INSERT INTO `transforms` (`name`, `enable`) VALUES
 ('PhraseToBookLOC', 1),
 ('PhraseToConferenceCA', 1),
 ('PhraseToPhraseW', 1),
+('PhraseToBookArticleNSK', 1),
 ('PersonToUrlSE', 1);
 
 CREATE TABLE IF NOT EXISTS `transforms_category` (

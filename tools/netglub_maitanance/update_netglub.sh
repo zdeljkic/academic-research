@@ -11,4 +11,4 @@ cp -r $1/transforms /usr/local/share/netglub/master/
 cp -r $1/transforms /usr/local/share/netglub/slave/
 
 ./update_mysql.sh
-./restart_ng.sh
+./restart_ng.sh --remove-log
