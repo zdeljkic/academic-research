@@ -1,15 +1,15 @@
 <?xml version='1.0'?>
 <!DOCTYPE TransformSchema>
-<transform name="PhraseToBookLOC" longName="To Book (LOC)" type="generic" >
-  <description>find books from phrase using library of congress</description>
+<transform name="PhraseToArticleIEEE" longName="To Article (IEEE)" type="generic" >
+  <description>find articles based on input phrase</description>
   <parameters>
     <param name="numResults" longName="Number of results desired" description="number of result asked" default="" optional="true" level="advanced" format="int">
       <int min="1" />
     </param>
-    <param name="minYear" longName="lower bound for year range (0 = no limit)" description="lower bound for year range (0 = no limit)" default="" optional="true" level="advanced" format="int">
+    <param name="minYear" longName="lower bound for year range" description="lower bound for year range" default="" optional="true" level="advanced" format="int">
       <int min="0" max="10000" />
     </param>
-    <param name="maxYear" longName="upper bound for year range (0 = no limit)" description="upper bound for year range (0 = no limit)" default="" optional="true" level="advanced" format="int">
+    <param name="maxYear" longName="upper bound for year range" description="upper bound for year range" default="" optional="true" level="advanced" format="int">
       <int min="0" max="10000" />
     </param>
   </parameters>
@@ -21,6 +21,6 @@
     <entity type="phrase" />
   </input>
   <output>
-    <entity type="book" />
+    <entity type="article" />
   </output>
 </transform>

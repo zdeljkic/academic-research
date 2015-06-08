@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!DOCTYPE TransformSchema>
-<transform name="PhraseToBookLOC" longName="To Book (LOC)" type="generic" >
+<transform name="PhraseToBookArticleNSK" longName="To Book (NSK)" type="generic" >
   <description>find books from phrase using library of congress</description>
   <parameters>
     <param name="numResults" longName="Number of results desired" description="number of result asked" default="" optional="true" level="advanced" format="int">
@@ -21,6 +21,7 @@
     <entity type="phrase" />
   </input>
   <output>
+    <entity type="article" />
     <entity type="book" />
   </output>
 </transform>

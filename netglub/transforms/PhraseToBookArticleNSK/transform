@@ -1,0 +1,115 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# This transforms takes a phrase and searches the library of congress (loc.gov) for book
+# The desired number of books is passed in as a parameter.
+
+import requests
+from bs4 import BeautifulSoup
+from generic_transform import *
+
+def year_in_bounds(year, minYear, maxYear):
+	try:
+		year = int(year)
+	except:
+		year = 0
+	if minYear and year < minYear:
+		return False
+	if maxYear and year > maxYear:
+		return False
+	
+	return True
+ 
+def wtf(wtfstring):
+	s = ""
+	for c in wtfstring:
+		s += chr(ord(c))
+	return s.decode("utf-8")
+
+# load input phrase and parameters
+e_type,e_values,params = get_from_args()
+
+query = e_values["value"]
+
+# get passed parameters or defaults into variables
+# minYear/maxYear == 0 indicates no limit on that bound
+numResults = 10
+minYear = 0
+maxYear = 0
+
+if "numResults" in params:
+	numResults = int(params["numResults"])
+if "minYear" in params:
+	minYear = int(params["minYear"])
+if "maxYear" in params:
+	maxYear = int(params["maxYear"])
+
+# get the search url
+req = requests.get("http://katalog.nsk.hr/F")
+soup = BeautifulSoup(req.text)
+searchUrl = soup.find("form")["action"]
+
+# both the query and the number of results are sent in the HTTP GET request
+par = {"request": query, "func": "find-e"}
+
+counter = 1
+while counter <= 45:
+	par["jump"] = counter
+	req = requests.get(searchUrl, params = par)
+	soup = BeautifulSoup(req.text)
+
+	for parent_tag in soup.findAll(valign="baseline"):
+		tag_list = parent_tag.contents
+		
+		url_string = parent_tag.a["href"]
+		
+		title_string = tag_list[7].text.strip()
+		title_string = title_string[title_string.rfind("\n"):].strip()
+		while not title_string[-1:].isalnum():
+			title_string = title_string[:-1]
+
+		type_hr = wtf(tag_list[9].text.strip())
+		if type_hr == "knjiga":
+			type_en = "book"
+		elif type_hr == u"članak":
+			type_en = "article"
+		else:
+			continue
+		
+		date_string = tag_list[11].text.strip()
+
+		# if there are bounds on article year, check them
+		if not year_in_bounds(date_string, minYear, maxYear):
+			continue
+
+		req=requests.get(url_string)
+		soup = BeautifulSoup(req.text)
+		tag_list = soup.findAll("tr")
+		tag_list = [tag for tag in tag_list if tag.find(class_ = "td1")]
+		
+		authors = []
+		# Autor
+		for tag in tag_list:
+			if tag.td.text.strip() == "Autor":
+				authors.append(tag.a.text)
+		
+		# Ostali autori
+		for i in range(len(tag_list)):
+			if tag_list[i].td.text.strip() == "Ostali autori":
+				authors.append(tag_list[i].a.text)
+				for j in range(i+1, len(tag_list)):
+					if tag_list[j].td.text.strip():
+						break
+					authors.append(tag_list[j].a.text)
+
+		authors = [wtf(a) for a in authors]
+		authors_string = "; ".join(authors)
+
+		# write the final result
+		write_result("book", {"value": title_string, "authors": authors_string, "date": date_string, "url": url_string})
+		numResults -= 1
+		
+		if numResults == 0:
+			sys.exit(0)
+
+	counter += 15

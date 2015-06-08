@@ -3,11 +3,17 @@
 <transform name="PhraseToBookArticleKoha" longName="To Book/Article (Koha)" type="generic" >
   <description>find books and articles from a website using the Koha system</description>
   <parameters>
-    <param name="url" longName="URL of the Koha website (don't forget http:// or https:// in front!!)" description="url of the Koha website" optional="false" level="advanced" format="string">
+    <param name="url" longName="URL of the Koha website (with http:// or https:// in front)" description="url of the Koha website" default="http://lib.fer.hr/" optional="false" level="advanced" format="string">
       <string regex=".*"/>
     </param>
-    <param name="maxResults" longName="Maximum number of books/articles desired" description="number of results asked" default="10" optional="false" level="advanced" format="int">
-      <int min="1" max="50"/>
+    <param name="numResults" longName="Number of results desired" description="number of result asked" default="" optional="true" level="advanced" format="int">
+      <int min="1" />
+    </param>
+    <param name="minYear" longName="lower bound for year range (0 = no limit)" description="lower bound for year range (0 = no limit)" default="" optional="true" level="advanced" format="int">
+      <int min="0" max="10000" />
+    </param>
+    <param name="maxYear" longName="upper bound for year range (0 = no limit)" description="upper bound for year range (0 = no limit)" default="" optional="true" level="advanced" format="int">
+      <int min="0" max="10000" />
     </param>
   </parameters>
   <config>

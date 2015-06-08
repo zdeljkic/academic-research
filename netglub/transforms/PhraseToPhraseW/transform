@@ -1,0 +1,53 @@
+#!/usr/bin/python
+
+# trazimo sinonime ulazne fraze
+# npr. Computer Forensics -> Digital Forensics, Network Forensics i sl
+# trenutno ne provjeravam jel neki nadeni sinonim isti kao originalni
+
+import sys
+import requests
+from bs4 import BeautifulSoup
+from generic_transform import *
+
+def out(phrase):
+	write_result("phrase", {"value": phrase})
+
+e_type,e_values,params = get_from_args()
+
+phrase = e_values["value"]
+
+p = {"family": "wikipedia", "search": phrase, "language": "en", "Go": "go"}
+r = requests.get("http://www.wikipedia.org/search-redirect.php", params = p)
+
+soup = BeautifulSoup(r.text)
+
+title = soup.head.title.string
+
+ts = title.split(" - ")
+
+# po naslovu znamo je li pronaden, ako je drugi dio naslova "Wikipedia..."
+# onda je sve u redu, a ako je "Search results" onda nije.
+# npr. Computer Forensics daje dobru stranicu "bezveze asd asd" daje Search Results (lose)
+if ts[1] != "Wikipedia, the free encyclopedia":
+	sys.exit()
+
+# ako je nasao nesto, a naslov nije isti, dogodio se redirect
+# novi naslov je isto sinonim
+# npr. Lecture Capture se redirecta na Lecture Recording
+out(ts[0])
+
+# Kategorije na dnu wikipedija stranice su sinonimi (cesto opcenitiji nego originalna fraza)
+categories = soup.find(class_ = "mw-normal-catlinks").ul.find_all("a")
+for cat in categories:
+	out(cat.string)
+
+# Naslovi tablica u koje stranica spada, takoder dobri sinonimi
+tables = soup.find_all(class_ = "nv-view")
+for t in tables:
+	out(t.a["title"][9:])
+	
+	tt = t.parent.parent.next_sibling.next_sibling
+	if tt != None:
+		for t2 in tt.find_all("a"):
+			out(t2["title"])
+

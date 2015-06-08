@@ -1,0 +1,44 @@
+#!/usr/bin/python
+# coding=utf-8
+
+import requests
+from bs4 import BeautifulSoup
+from generic_transform import * 
+   
+e_type,e_values,params = get_from_args()
+
+query = e_values["value"]
+
+numResults = 20
+if "numResults" in params:
+  numResults = int(params["numResults"])
+  if numResults > 100 :
+    numResults = 100
+  elif numResults < 1:
+    numResults = 1
+
+counter = 0
+while counter <= 100:
+	req = requests.get("https://google.com/search", params = {"q": query, "start": counter})
+	soup = BeautifulSoup(req.text)
+
+	for parent_tag in soup.find_all(class_ = "g"):
+		url_tag = parent_tag.a
+		href = url_tag["href"]
+		if not href.startswith("/url?q="):
+			continue
+
+		url_string = href[7:href.find("&")]
+		
+		title_string = url_tag.text
+
+		# write the result and decrement the remaing number of results we have to fetch
+		write_result("url", {"value": url_string, "title": title_string})
+		numResults -= 1
+
+		# if we found all the results - exit
+		if numResults == 0:
+			sys.exit()
+
+	# go to the next 10 results (next page)
+	counter += 10

@@ -1,0 +1,122 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# This transforms takes a phrase and searches Google Scholar for articles.
+# The desired number of articles and upper and lower year bound are passed in as a parameter.
+
+import sys
+import time
+import requests
+from bs4 import BeautifulSoup
+from generic_transform import *
+
+def year_in_bounds(year, minYear, maxYear):
+	try:
+		year = int(year)
+	except:
+		year = 0
+	if minYear and year < minYear:
+		return False
+	if maxYear and year > maxYear:
+		return False
+	
+	return True
+
+# load input phrase and parameters
+e_type,e_values,params = get_from_args()
+query = e_values["value"]
+
+# get passed parameters or defaults into variables
+# minYear/maxYear == 0 indicates no limit on that bound
+numResults = 10
+minYear = 0
+maxYear = 0
+
+if "numResults" in params:
+	numResults = int(params["numResults"])
+if "minYear" in params:
+	minYear = int(params["minYear"])
+if "maxYear" in params:
+	maxYear = int(params["maxYear"])
+
+# Repeat until we have enough results, or until counter reaches 100.
+# It is necessary to impose such a limit, otherwise it is possible that the search criteria
+# is too narrow and the script goes on for too long, "spamming" google with requests endlessly
+# and then get blocked by requiring CAPTCHA.
+counter = 0
+while counter <= 100:
+	req = requests.get("https://scholar.google.com/scholar", params = {"q": query, "as_vis": "1", "start": str(counter)})
+	soup = BeautifulSoup(req.text)
+
+	# If we can't find the tag, it means google recognized this script as a bot
+	# and blocked further searches by requesting a captcha to be solved :(
+	if soup.find(class_ = "gs_ri") is None:
+		write_error("too many requests - blocked by Google (CAPTCHA requested)")
+		sys.exit(1)
+
+	for parent_tag in soup.find_all(class_ = "gs_ri"):
+		# If the title has [BOOK] as a prefix, we will skip it - we want articles.
+		# Otherwise, remove the [...] prefixes (if they exist) and take the rest as the title_string.
+		title_tag = parent_tag.h3
+
+		if title_tag.text[:6] == "[BOOK]":
+			continue
+
+		index = title_tag.text.rfind("]")
+		if index != -1:
+			title_string = title_tag.text[index+1:].strip()
+		else:
+			title_string = title_tag.text
+
+		# the authors are listed in this form:
+		# <initials1> <lastname1>, <initials2> <lastname2>, ...
+		# and they're ending either in "-" or "…" character
+		# also, if they end in "…" that means not all authors are listed - I didn't find an easy way to get the rest
+		authors_tag = parent_tag.find(class_ = "gs_a")
+
+		ind1 = authors_tag.text.find("-")
+		ind2 = authors_tag.text.find(u"…")
+
+		# we want to get the smaller index of the two, if the second index even exists
+		if ind2 == -1:
+			index = ind1
+		else:
+			index = ind1 if ind1 < ind2 else ind2
+
+		# we want to get the authors in this form:
+		# <lastname1>, <initials1>; <lastname2>, <initials2>, ...
+		authors_string = ""
+		for author in authors_tag.text[:index].split(","):
+			try:
+				initials, lastname = author.strip().split(" ", 1)
+				authors_string += lastname + ", " + initials + "; "
+			except:
+				# strange author name, skip it
+				pass
+
+		authors_string = authors_string[:-2]	# strip the "; " at the end
+
+		# the date is located near the end of the string in the author tag
+		# specifically, it's just before the last " -" sequence, eg. "...2008 - example.com"
+		index = authors_tag.text.rfind(" -")
+
+		date_string = authors_tag.text[index-4:index]
+		
+		# if there are bounds on article year, check them
+		if not year_in_bounds(date_string, minYear, maxYear):
+			continue
+
+		# get the url - it's the first <a> tag under the parent tag
+		url_tag = parent_tag.a
+		url_string = url_tag["href"]
+
+		# write the result and decrement the remaing number of results we have to fetch
+		write_result("article", {"value": title_string, "authors": authors_string, "date": date_string, "url": url_string})
+		numResults -= 1
+
+		# if we found all the results - exit
+		if numResults == 0:
+			sys.exit()
+
+	# go to the next 10 results (next page)
+	counter += 10

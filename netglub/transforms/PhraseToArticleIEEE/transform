@@ -1,0 +1,88 @@
+#!/usr/bin/python
+
+# This transforms takes a phrase and searches IEEE Xplore for articles.
+# The website url and the maximum number of returned books and articles is passed in as a parameter.
+
+import requests
+import re
+from bs4 import BeautifulSoup
+import simplejson
+from generic_transform import *
+
+def year_in_bounds(year, minYear, maxYear):
+	try:
+		year = int(year)
+	except:
+		year = 0
+	if minYear and year < minYear:
+		return False
+	if maxYear and year > maxYear:
+		return False
+	
+	return True
+
+# load input phrase and parameters
+e_type,e_values,params = get_from_args()
+
+query = e_values["value"]
+
+numResults = 10
+minYear = 0
+maxYear = 0
+
+if "numResults" in params:
+	numResults = int(params["numResults"])
+if "minYear" in params:
+	minYear = int(params["minYear"])
+if "maxYear" in params:
+	maxYear = int(params["maxYear"])
+
+# set everything up for a json request and response
+# we first need to get the JSESSIONID cookie
+reqcookie = requests.get("http://ieeexplore.ieee.org/search/searchresult.jsp")
+jsid = reqcookie.history[0].cookies["JSESSIONID"]
+
+headers = {"Content-Type": "application/json;charset=utf-8", "Referer": "http://ieeexplore.ieee.org/search/searchresult.jsp", "Cookie": "JSESSIONID={}".format(jsid)}
+
+# while we have more results to fetch, load pages of 20 results and parse them
+# Repeat until we have enough results, or until page_counter reaches 5.
+# It is necessary to impose such a limit, otherwise it is possible that the search criteria
+# is too narrow and the script goes on for too long, "spamming" google with requests endlessly
+# and then get blocked by requiring CAPTCHA.
+page_counter = 1
+while True:
+	data = simplejson.dumps({"queryText": query, "rowsPerPage": "20", "pageNumber": str(page_counter)})
+	req = requests.post("http://ieeexplore.ieee.org/rest/search", headers=headers, data=data)
+
+	records = simplejson.loads(req.text)["records"]
+	
+	for r in records:
+		date_string = r["publicationYear"]
+		if not year_in_bounds(date_string, minYear, maxYear):
+			continue
+		
+		title_string = re.sub('\s+', ' ', BeautifulSoup(r["title"]).text)
+		title_string = title_string.replace("[::", "")
+		title_string = title_string.replace("::]", "")
+		
+		author_list = []
+		authors = r["authors"]
+		for a in authors:
+			if "," in a["normalizedName"]:
+				last, first = a["normalizedName"].split(", ", 1)
+			else:
+				first, last = a["normalizedName"].split(" ", 1)
+			author_list.append("{}, {}".format(last, first))
+		authors_string = "; ".join(author_list)
+		
+		url_string = "http://ieeexplore.ieee.org" + r["pdfLink"]
+		
+		# write the result and decrement the remaing number of results we have to fetch
+		write_result("article", {"value": title_string, "authors": authors_string, "date": date_string, "url": url_string})
+		numResults -= 1
+		
+		if numResults == 0:
+			sys.exit()
+
+	page_counter += 1
+

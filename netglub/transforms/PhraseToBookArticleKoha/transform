@@ -7,12 +7,37 @@ import requests
 from bs4 import BeautifulSoup
 from generic_transform import *
 
+def year_in_bounds(year, minYear, maxYear):
+	try:
+		year = int(year)
+	except:
+		year = 0
+	if minYear and year < minYear:
+		return False
+	if maxYear and year > maxYear:
+		return False
+	
+	return True
+
 # load input phrase and parameters
 e_type,e_values,params = get_from_args()
 
 query = e_values["value"]
+
+# get passed parameters or defaults into variables
+# minYear/maxYear == 0 indicates no limit on that bound
 url = params["url"]
-maxResults = params["maxResults"]
+
+numResults = 10
+minYear = 0
+maxYear = 0
+
+if "numResults" in params:
+	numResults = int(params["numResults"])
+if "minYear" in params:
+	minYear = int(params["minYear"])
+if "maxYear" in params:
+	maxYear = int(params["maxYear"])
 
 # the input url is in one of these three forms:
 # 1) http://example.com
@@ -20,57 +45,65 @@ maxResults = params["maxResults"]
 # 3) http://example.com/cgi-bin/koha/opac-main.pl
 # we need to get it in the form of http://example.com/cgi-bin/koha/opac-search.pl
 if url.endswith("/cgi-bin/koha/opac-main.pl"):
-	searchurl = url[:-7] + "search.pl"
+	searchUrl = url[:-7] + "search.pl"
 elif url.endswith("/"):
-	searchurl = url + "cgi-bin/koha/opac-search.pl"
+	searchUrl = url + "cgi-bin/koha/opac-search.pl"
 else:
-	searchurl = url + "/cgi-bin/koha/opac-search.pl"
+	searchUrl = url + "/cgi-bin/koha/opac-search.pl"
 
-req = requests.get(searchurl, params = {"q": query})
-soup = BeautifulSoup(req.text)
+counter = 0
+while counter < 200:
+	req = requests.get(searchUrl, params = {"q": query, "offset": counter})
+	soup = BeautifulSoup(req.text)
 
-# set up the counter so we don't return more results than asked
-counter = int(maxResults)
+	for title_tag in soup.find_all(class_ = "title"):
+		# we're going to use the title_tag's parent tag to easily navigate to other tags
+		parent_tag = title_tag.parent
 
-for title_tag in soup.find_all(class_ = "title"):
-	# check if we've already returned the max amount of results
-	if counter == 0:
-		break
+		# get the title string
+		title_string = title_tag.text
 
-	# we're going to use the title_tag's parent tag to easily navigate to other tags
-	parent_tag = title_tag.parent
+		# title_tag is the <a> tag so we get the url from it
+		baseUrl = searchUrl[:searchUrl[8:].index("/")+8]
+		url_string = baseUrl + title_tag["href"]
 
-	# get the title string
-	title_string = title_tag.text
+		# try to get the authors_tag and check if it exists
+		# if it does, the authors string is almost already in the correct format,
+		# we just need to remove the extra whitespace and the trailing dot
+		# if it doesn't, just leave the authors string empty
+		authors_tag = parent_tag.find(class_ = "author")
 
-	# try to get the authors_tag and check if it exists
-	# if it does, the authors string is almost already in the correct format,
-	# we just need to remove the extra whitespace and the trailing dot
-	# if it doesn't, just leave the authors string empty
-	authors_tag = parent_tag.find(class_ = "author")
+		if authors_tag is not None:
+			authors_string = authors_tag.text.replace("\n            ", " ")[:-2]
+		else:
+			authors_string = ""
 
-	if authors_tag is not None:
-		authors_string = authors_tag.text.replace("\n            ", " ")[:-2]
-	else:
-		authors_string = ""
+		# get the type (book or article), if it's neither - skip the entry
+		type_tag = parent_tag.find(class_ = "materialtype")
 
-	# get the type (book or article), if it's neither - skip the entry
-	type_tag = parent_tag.find(class_ = "materialtype")
+		type_string = type_tag["alt"]
+		if not (type_string == "article" or type_string == "book"):
+			continue
 
-	type_string = type_tag["alt"]
-	if not (type_string == "article" or type_string == "book"):
-		continue
+		# try to get the tag with the publisher information, and check if it exists
+		# if it does, and the last 4 charaters aren't "   0" or similar, we take them as the publishing year
+		date_tag = parent_tag.find(class_ = "results_summary publisher")
 
-	# try to get the tag with the publisher information, and check if it exists
-	# if it does, and the last 4 charaters aren't "   0" or similar, we take them as the publishing year
-	date_tag = parent_tag.find(class_ = "results_summary publisher")
+		if date_tag is not None and date_tag.text[-4:].strip() != "0":
+			date_string = date_tag.text[-4:].strip()
+		else:
+			date_string = ""
 
-	if date_tag is not None and date_tag.text[-4:].strip() != "0":
-		date_string = date_tag.text[-4:].strip()
-	else:
-		date_string = ""
+		# if there are bounds on article year, check them
+		if not year_in_bounds(date_string, minYear, maxYear):
+			continue
 
-	# write the final result and decrement the counter counting the remaining number of results we have to fetch
-	write_result(type_string, {"value": title_string, "authors": authors_string, "date": date_string})
-	counter -= 1
+		# write the final result and decrement the counter counting the remaining number of results we have to fetch
+		write_result(type_string, {"value": title_string, "authors": authors_string, "date": date_string, "url": url_string})
+		numResults -= 1
+		
+		if numResults == 0:
+			sys.exit(0)
+		
+	counter += 50
 

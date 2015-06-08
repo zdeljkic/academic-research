@@ -9,6 +9,10 @@ e_type,e_values,params = get_from_args()
 
 phrase = e_values["value"]
 
+numResults = 10
+if "numResults" in params:
+	numResults = int(params["numResults"])
+
 url = "http://www.conferencealerts.com/"
 
 p = {"searchTerm": phrase}
@@ -19,9 +23,13 @@ soup = BeautifulSoup(r.text)
 res = soup.find(id = "searchResultTable").find_all("a")
 for r in res:
 	s = r.text
+	url_string = url + r["href"]
 	
 	if s == "1" or s == "All":
 		continue
 	else:
-		write_result("phrase", {"value": s})
+		write_result("conference", {"value": s, "url": url_string})
+		numResults -= 1
+		if numResults == 0:
+			sys.exit(0)
 	

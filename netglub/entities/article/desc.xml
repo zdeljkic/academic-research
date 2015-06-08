@@ -12,5 +12,8 @@
     <field name="date" longName="Date" description="date" default="" optional="true" level="advanced" format="string" ioMode="input">
       <string regex=".*"/>
     </field>
+    <field name="url" longName="URL" description="URL" default="" optional="true" level="advanced" format="string" ioMode="input">
+      <string regex=".*"/>
+    </field>
   </fieldList>
 </entity>
